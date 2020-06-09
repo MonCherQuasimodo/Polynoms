@@ -10,12 +10,12 @@
 
 class Polynom {
 private:
-    using Monom = std::pair<double, size_t>;
+    using Monom = std::pair<long double, size_t>;
     std::list<Monom> data_;
     static Polynom& alg_sum_(Polynom& left, const Polynom& right, bool substract=false);
     static std::pair<Polynom, Polynom> division_(const Polynom& left, const Polynom& right);
 public:
-    Polynom(const double&);
+    Polynom(const long double&);
     Polynom(const Monom&);
 
     Polynom() = default;
@@ -26,13 +26,13 @@ public:
     ~Polynom() = default;
 
     explicit operator int() const;
-    explicit operator double() const;
-    double operator()(const double&) const;
+    explicit operator long double() const;
+    long double operator()(const long double&) const;
 
     int degree() const;
     void clear();
 
-    std::set<double> roots() const;
+    std::set<long double> roots(METHOD=NEWTONE) const;
 
     void difference(size_t n=1);
     const Polynom differenced(size_t n=1) const;
@@ -59,7 +59,7 @@ public:
 };
 
 
-Polynom::Polynom(const double& scalar) :
+Polynom::Polynom(const long double& scalar) :
     Polynom({scalar, 0}) {}
 
 Polynom::Polynom(const Monom& monom) {
@@ -68,7 +68,7 @@ Polynom::Polynom(const Monom& monom) {
     }
 }
 
-Polynom::operator double() const {
+Polynom::operator long double() const {
     if (data_.size() == 1 && data_.front().second == 0) {
         return data_.front().first;
     }
@@ -76,15 +76,15 @@ Polynom::operator double() const {
 }
 
 Polynom::operator int() const {
-    double result = double(*this);
+    long double result = static_cast<long double>(*this);
     if (result == static_cast<int>(result)) {
         return result;
     }
     throw std::bad_cast();
 }
 
-double Polynom::operator()(const double& x) const {
-    double result = 0;
+long double Polynom::operator()(const long double& x) const {
+    long double result = 0;
     for (auto i: data_) {
         result += i.first * std::pow(x, i.second);
     }
@@ -99,7 +99,7 @@ void Polynom::clear() {
     data_.clear();
 }
 
-std::set<double> Polynom::roots() const {
+std::set<long double> Polynom::roots(METHOD method) const {
     switch (degree()) {
     case -1:
     case 0:
@@ -109,7 +109,7 @@ std::set<double> Polynom::roots() const {
         return {d.size() == 1 ? 0 : -d.front().first / d.back().first};
     }
     default:
-        return find_roots(*this);
+        return find_roots(*this, method);
     }
 }
 
@@ -140,7 +140,7 @@ Polynom& Polynom::alg_sum_(Polynom& left, const Polynom& right, bool substract) 
     auto& r = right.data_;
     auto it_l = l.begin();
     auto it_r = r.begin();
-    double coef = (substract ? -1 : 1);
+    long double coef = (substract ? -1 : 1);
     while (it_l != l.end() && it_r != r.end()) {
         if (it_l->second > it_r->second) {
             l.insert(it_l, {it_r->first * coef, it_r->second});
@@ -162,7 +162,7 @@ Polynom& Polynom::alg_sum_(Polynom& left, const Polynom& right, bool substract) 
 
 std::pair<Polynom, Polynom> Polynom::division_(const Polynom& left, const Polynom& right) {
     if (right.degree() == -1) {
-        throw std::runtime_error("Divide by 0");
+        throw std::runtime_error("Division by 0");
     }
 
     Polynom mod = left;
@@ -238,7 +238,7 @@ Polynom& operator%=(Polynom& left, const Polynom& right){
 std::istream& operator>>(std::istream& in, Polynom& poly) {
     //Упрощение для данной задачи.
     poly.clear();
-    double c;
+    long double c;
     in >> c;
     poly = Polynom(c);
     return in;
